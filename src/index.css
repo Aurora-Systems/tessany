@@ -1,0 +1,50 @@
+@font-face {
+  font-family: corben;
+  src: url("../src/assets/font.ttf");
+}
+
+@font-face {
+  font-family: fleur;
+  src: url("../src/assets/font_two.ttf");
+}
+
+:root{
+  --primary_color:#f8efef;
+  --secondary_color:#ff0000;
+}
+
+body{
+  font-family: corben;
+}
+
+.p_font{
+  font-family: fleur;
+}
+
+.p_text{
+  color: var(--primary_color);
+}
+
+.s_text{
+  color: var(--secondary_color);
+}
+
+.p_bg{
+  background-color: var(--primary_color);
+}
+
+.s_bg{
+  background-color: var(--secondary_color);
+}
+
+
+.s_btn{
+  background-color: var(--secondary_color);
+  width: 200px;
+  color:white;
+}
+
+.s_btn:hover{
+  background-color: var(--secondary_color);
+  color:white;
+}

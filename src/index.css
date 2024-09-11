@@ -48,3 +48,17 @@ body{
   background-color: var(--secondary_color);
   color:white;
 }
+
+.slider_btn{
+  min-width:200px;
+  background-color: #f8efef;
+}
+
+.slider_btn:focus{
+  background-color: var(--secondary_color)!important;
+  color:white;
+}
+
+.slider_container{
+  overflow: auto;
+}

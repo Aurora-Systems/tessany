@@ -10,7 +10,17 @@ export const Home=()=>{
                 <a href="/shop"><button className="mt-3 btn s_btn">Shop Now</button></a>
 
                 </div>
-                <Marquee speed={10}>
+                <Marquee speed={20}>
+                    <div className="col-sm me-3">
+                        <img src="https://ngratesc.sirv.com/Tessany/2150916722.png" className="img-fluid rounded"/>
+                    </div>
+                    <div className="col-sm me-2">
+                        <img src="https://ngratesc.sirv.com/Tessany/2151073506.png" className="img-fluid rounded"/>
+
+                    </div>
+                    <div className="col-sm me-2">
+                        <img src="https://ngratesc.sirv.com/Tessany/2150916680.png" className="img-fluid rounded"/>
+                    </div>
                     <div className="col-sm me-2">
                         <img src="https://ngratesc.sirv.com/Tessany/2150916722.png" className="img-fluid rounded"/>
                     </div>
@@ -20,7 +30,6 @@ export const Home=()=>{
                     </div>
                     <div className="col-sm me-2">
                         <img src="https://ngratesc.sirv.com/Tessany/2150916680.png" className="img-fluid rounded"/>
-
                     </div>
                 </Marquee>
             </div>

@@ -8,9 +8,10 @@ import Home from './pages/home'
 import Shop from './pages/shop'
 import Contact from './pages/contact'
 import Blog from './pages/blog'
+import { ToastContainer } from 'react-toastify'
 
 createRoot(document.getElementById('root')!).render(
-  <StrictMode>
+  <>
 
     <TopNavbar/>
     <BrowserRouter>
@@ -22,5 +23,6 @@ createRoot(document.getElementById('root')!).render(
         </Routes>
     </BrowserRouter>
     <Footer/>
-  </StrictMode>,
+    <ToastContainer/>
+    </>,
 )

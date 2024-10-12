@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { FormEvent, useEffect, useState } from "react"
 import db from "../init/supabase"
 import {toast} from "react-toastify"
 import item_bg from "../components/item_bg"
@@ -64,6 +64,9 @@ export const Shop=()=>{
                 toast("⚠️ Minimum order of 1")
             }
         }
+    }
+    const handle_payment=(e:FormEvent)=>{
+        e.preventDefault()
     }
     useEffect(()=>{
         get_categories()

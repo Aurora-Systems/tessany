@@ -1,7 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
+import { db_url, key } from "../db/keys";
 
-const s_url =  import.meta.env.VITE_SUPABASE_URL
-const s_key = import.meta.env.VITE_SUPABASE_KEY
-const db = createClient(s_url, s_key) 
+const db = createClient(db_url,key) 
 
 export default db

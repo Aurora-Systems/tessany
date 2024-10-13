@@ -8,10 +8,12 @@ import { CategoriesResInterface } from "../schemas/categories_schema"
 import { items_res_default, ItemsResInterface } from "../schemas/items_schema"
 import checkout_bg from "../components/checkout_bg"
 import { payment_data_default, PaymentDataInterface } from "../schemas/payment_schema"
+import { server_url, user_id } from "../db/keys"
+import axios from "axios"
 export const Shop=()=>{
    
 
-    const user_id = import.meta.env.VITE_USER_ID
+    
     const [categories,set_categories] = useState<Array<CategoriesResInterface>>([])
     const [items,set_items] = useState<Array<ItemsResInterface>>([])
     const [show_checkout,set_show_checkout] = useState<boolean>(false)
@@ -65,8 +67,14 @@ export const Shop=()=>{
             }
         }
     }
-    const handle_payment=(e:FormEvent)=>{
+    const handle_payment= async(e:FormEvent)=>{
         e.preventDefault()
+        const checkout_data:PaymentDataInterface = {...pay_data, order_details:[{item: selected_item.item_name, charge:selected_item.price,quantity:quanity_order},{item:"Tax 15%", charge:tax_charge,quantity:1}]}
+        axios.post(`${server_url}/payments/initiate_payment/mobile/`,checkout_data).then(res=>{
+            console.log(res)
+        }).catch((err)=>{
+            console.log(err)
+        })
     }
     useEffect(()=>{
         get_categories()
@@ -219,7 +227,7 @@ export const Shop=()=>{
                             </div>
                             <div className="col-sm">
                                 <h5>Payment Details</h5>
-                                <form >
+                                <form onSubmit={handle_payment}>
                                         <div className="mb-2">
                                             <span>First Name</span>
                                             <input 
@@ -234,6 +242,7 @@ export const Shop=()=>{
                                             <input 
                                                 type="text" 
                                                 className="form-control"
+                                                required
                                                 onChange={(e)=>set_pay_data({...pay_data, client_details:{...pay_data.client_details, last_name:e.target.value}})}    
                                             />
                                         </div>
@@ -242,12 +251,17 @@ export const Shop=()=>{
                                             <input 
                                                 type="email" 
                                                 className="form-control"
+                                                required
                                                 onChange={(e)=>set_pay_data({...pay_data, client_details:{...pay_data.client_details, email:e.target.value}})}    
                                             />
                                         </div>
                                         <div className="mb-2">
                                             <span>Address</span>
-                                            <textarea className="form-control" onChange={(e)=>set_pay_data({...pay_data, client_details:{...pay_data.client_details, address:e.target.value}})}/>
+                                            <textarea 
+                                                className="form-control" 
+                                                onChange={(e)=>set_pay_data({...pay_data, client_details:{...pay_data.client_details, address:e.target.value}})}
+                                                required
+                                            />
                                         </div>
                                         <div className="mb-2">
                                             <span>Payment Method</span>
@@ -271,7 +285,8 @@ export const Shop=()=>{
                                                 value={"onemoney"} 
                                                 className="form-check-input" 
                                                 name="payment_method"
-                                                onChange={(e)=>set_pay_data({...pay_data, client_details:{...pay_data.client_details, first_name:e.target.value}})}
+                                                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                                                onChange={(e:any)=>set_pay_data({...pay_data, client_details:{...pay_data.client_details, payment_method:e.target.value}})}
                                             />
                                             <span className="form-check-label">One Money</span>
 

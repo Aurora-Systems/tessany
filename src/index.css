@@ -63,3 +63,6 @@ body{
   overflow: auto;
 }
 
+.gen_btn{
+  width: 200px;
+}

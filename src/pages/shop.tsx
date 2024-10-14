@@ -3,16 +3,15 @@ import db from "../init/supabase"
 import {toast} from "react-toastify"
 import item_bg from "../components/item_bg"
 import ClampLines from "react-clamp-lines"
-import { Modal } from "react-bootstrap"
+import { Modal, Spinner } from "react-bootstrap"
 import { CategoriesResInterface } from "../schemas/categories_schema"
 import { items_res_default, ItemsResInterface } from "../schemas/items_schema"
 import checkout_bg from "../components/checkout_bg"
 import { payment_data_default, PaymentDataInterface } from "../schemas/payment_schema"
 import { server_url, user_id } from "../db/keys"
 import axios from "axios"
+import Countdown, { CountdownProps } from "react-countdown"
 export const Shop=()=>{
-   
-
     
     const [categories,set_categories] = useState<Array<CategoriesResInterface>>([])
     const [items,set_items] = useState<Array<ItemsResInterface>>([])
@@ -22,6 +21,9 @@ export const Shop=()=>{
     const [quanity_order,set_quanity_order] = useState<number>(1)
     const [total_charge,set_total_charge] = useState<number>(0)
     const [tax_charge,set_tax_charge] = useState<number>(0)
+    const [show_transaction,set_show_transaction] = useState<boolean>(false)
+    const [payment_loading,set_payment_loading] = useState<boolean>(false)
+    const [poll,set_poll] = useState<string>("")
     const get_categories=async()=>{
         const {data, error} = await db.from("categories").select("*").eq("user_id", user_id) 
         if(error){
@@ -67,14 +69,74 @@ export const Shop=()=>{
             }
         }
     }
-    const handle_payment= async(e:FormEvent)=>{
+    const handle_payment= (e:FormEvent)=>{
         e.preventDefault()
-        const checkout_data:PaymentDataInterface = {...pay_data, order_details:[{item: selected_item.item_name, charge:selected_item.price,quantity:quanity_order},{item:"Tax 15%", charge:tax_charge,quantity:1}]}
-        axios.post(`${server_url}/payments/initiate_payment/mobile/`,checkout_data).then(res=>{
-            console.log(res)
-        }).catch((err)=>{
-            console.log(err)
+        set_payment_loading(true)
+        const checkout_data:PaymentDataInterface = {...pay_data, order_details:[{item: selected_item.item_name, unit_charge:selected_item.price,quantity:quanity_order},{item:"Tax 15%", unit_charge:tax_charge,quantity:1}]}
+        const payment_data = {
+            items:checkout_data.order_details,
+            mobile_number:checkout_data.client_details.payment_number,
+            payment_method:checkout_data.client_details.payment_method
+        } 
+
+        fetch(`${server_url}/payments/initiate_payment/mobile`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payment_data)
         })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`Server error: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            set_show_transaction(true)    
+            set_poll(data.data.pollUrl as string)        
+                
+        })
+        .catch(error => {
+            console.error('Error initiating payment:', error);
+        }).finally(()=>{
+            set_payment_loading(false)
+        })
+
+        
+        // axios.post(`${server_url}/payments/initiate_payment/mobile`,{...payment_data},{
+        //     headers:{
+        //         "Content-Type":"application/json"
+        //     }
+        // }).then(res=>{
+        //     console.log(res)
+        // }).catch(err=>{
+        //     console.log(err)
+        // })
+    }
+
+    const check_paid=({seconds, completed})=>{
+        if(completed){
+            axios.get(poll).then(res=>{
+                console.log(res)
+            }).catch(err=>{
+                console.log(err)
+            })
+            return(
+<>Done</>
+            )
+        }else{
+            return(
+                <div className="text-center">
+                <p>Waiting for transaction to go through</p>
+                <h1 className="mb-2">{seconds}</h1>
+                <div className="d-flex gap-2">
+                    <button className="btn btn-outline-success gen_btn">Check Now</button>
+                    <button className="btn btn-outline-danger gen_btn" onClick={()=>set_show_transaction(false)}>Cancel</button>
+                </div>
+                </div>
+            )
+        }
     }
     useEffect(()=>{
         get_categories()
@@ -297,11 +359,25 @@ export const Shop=()=>{
                                             <input type="tel" minLength={10} maxLength={10} className="form-control" onChange={(e)=>set_pay_data({...pay_data, client_details:{...pay_data.client_details,payment_number:e.target.value}})}/>
                                         </div>
                                         <div>
-                                            <button type="submit" className="w-100 btn btn-success">Pay</button>
+                                            <button type="submit" className="w-100 btn btn-success" disabled={payment_loading}>{payment_loading?<Spinner variant="light" size="sm"/>:"Pay"}</button>
                                         </div>
                                     
                                 </form>
                                 
+                            </div>
+                        </div>
+                    </Modal.Body>
+                </Modal>
+                <Modal show={show_transaction} fullscreen>
+                    <Modal.Body>
+                        <div className="vh-100 d-flex align-items-center justify-content-center">
+                            <div>
+                                <Countdown date=
+                                    {
+                                        Date.now()+10000
+                                    }
+                                    renderer={check_paid}
+                                />
                             </div>
                         </div>
                     </Modal.Body>

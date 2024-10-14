@@ -10,7 +10,7 @@ interface ClientDetails{
 interface OrderDetails{
     quantity:number,
     item:string,
-    charge:number
+    unit_charge:number
 }
 
 export interface PaymentDataInterface{

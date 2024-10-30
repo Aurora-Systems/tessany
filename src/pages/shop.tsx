@@ -10,7 +10,7 @@ import checkout_bg from "../components/checkout_bg"
 import { payment_data_default, PaymentDataInterface } from "../schemas/payment_schema"
 import { server_url, user_id } from "../db/keys"
 import axios from "axios"
-import Countdown, { CountdownProps } from "react-countdown"
+import Countdown from "react-countdown"
 export const Shop=()=>{
     
     const [categories,set_categories] = useState<Array<CategoriesResInterface>>([])
@@ -24,6 +24,7 @@ export const Shop=()=>{
     const [show_transaction,set_show_transaction] = useState<boolean>(false)
     const [payment_loading,set_payment_loading] = useState<boolean>(false)
     const [poll,set_poll] = useState<string>("")
+    const [restart_countdown,set_restart_countdown] = useState<number>(0)
     const get_categories=async()=>{
         const {data, error} = await db.from("categories").select("*").eq("user_id", user_id) 
         if(error){
@@ -117,19 +118,32 @@ export const Shop=()=>{
 
     const check_paid=({seconds, completed})=>{
         if(completed){
-            axios.get(poll).then(res=>{
-                console.log(res)
+            axios.post(`${server_url}/payments/check_status`,{poll_url:poll}).then(res=>{
+                if(res.status==200){
+                    console.log(res.data)
+                    if(res.data.status==="paid"||res.data.status==="awaiting delivery"||res.data.status==="Delivered"){
+                        toast("Transaction successful")
+                    }else if(res.data.status==="sent"||res.data.status==="created"){
+                        set_restart_countdown((prev)=>prev+1)
+                    }
+                }else{
+                   throw new Error("Failed to get payment status")
+                }
             }).catch(err=>{
                 console.log(err)
+                toast("Failed to get payment status")
+                set_show_transaction(false)
             })
             return(
-<>Done</>
+                "Checking..."
             )
+          
         }else{
             return(
                 <div className="text-center">
                 <p>Waiting for transaction to go through</p>
-                <h1 className="mb-2">{seconds}</h1>
+                <p>Checking in</p>
+                <h1 className="mb-2">{seconds} s </h1>
                 <div className="d-flex gap-2">
                     <button className="btn btn-outline-success gen_btn">Check Now</button>
                     <button className="btn btn-outline-danger gen_btn" onClick={()=>set_show_transaction(false)}>Cancel</button>
@@ -217,7 +231,7 @@ export const Shop=()=>{
                                     {stock_message}
                                    </div>
                                     <div className="mb-2 d-flex gap-2">
-                                        <button className="btn btn-success w-100"> <i className="bi bi-eye"></i> View</button>
+                                        {/* <button className="btn btn-success w-100"> <i className="bi bi-eye"></i> View</button> */}
                                         <button className="btn btn-success w-100 " onClick={()=>{
                                             set_total_charge(i.price)
                                             set_tax_charge(((i.price/100)*15))
@@ -372,10 +386,9 @@ export const Shop=()=>{
                     <Modal.Body>
                         <div className="vh-100 d-flex align-items-center justify-content-center">
                             <div>
-                                <Countdown date=
-                                    {
-                                        Date.now()+10000
-                                    }
+                                <Countdown 
+                                    key={restart_countdown}
+                                    date={Date.now()+10000}
                                     renderer={check_paid}
                                 />
                             </div>

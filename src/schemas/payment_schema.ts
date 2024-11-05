@@ -8,6 +8,7 @@ interface ClientDetails{
 }
 
 interface OrderDetails{
+    item_id:number,
     quantity:number,
     item:string,
     unit_charge:number
@@ -28,4 +29,16 @@ export const payment_data_default:PaymentDataInterface={
         payment_number:""
     },
     order_details:[]
+}
+
+
+export interface TransactionInterface{
+    user_id: string,
+    charged: number,
+    item_id: number,
+    address: string,
+    phone_number: string,
+    email: string,
+    first_name:string,
+    last_name:string
 }

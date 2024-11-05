@@ -10,6 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@emailjs/browser": "^4.4.1",
     "@supabase/supabase-js": "^2.45.4",
     "@types/react-lines-ellipsis": "^0.15.6",
     "axios": "^1.7.7",

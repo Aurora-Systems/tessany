@@ -3,3 +3,6 @@ export const key:string = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 export const user_id:string = "kp_37a03df9a66d49419317125565793fc6"
 export const server_url:string =  "https://tesspay.netlify.app/.netlify/functions/api"
 
+export const service_id:string = "service_70yedhd"
+export const template_id:string = "template_o42qmm8"
+export const public_key:string = "zwHX8gU39w6O7J1Pv" 

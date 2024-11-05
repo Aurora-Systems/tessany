@@ -1,4 +1,5 @@
 export interface ItemsResInterface{
+    id:number,
     created_at:string,
     item_name:string,
     in_stock:number,
@@ -10,6 +11,7 @@ export interface ItemsResInterface{
 }
 
 export const items_res_default:ItemsResInterface = {
+    id:0,
     created_at:"",
     item_name:"",
     in_stock:0,

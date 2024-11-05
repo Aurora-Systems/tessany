@@ -7,10 +7,12 @@ import { Modal, Spinner } from "react-bootstrap"
 import { CategoriesResInterface } from "../schemas/categories_schema"
 import { items_res_default, ItemsResInterface } from "../schemas/items_schema"
 import checkout_bg from "../components/checkout_bg"
-import { payment_data_default, PaymentDataInterface } from "../schemas/payment_schema"
-import { server_url, user_id } from "../db/keys"
+import { payment_data_default, PaymentDataInterface, TransactionInterface } from "../schemas/payment_schema"
+import { public_key, server_url, service_id, template_id, user_id } from "../db/keys"
 import axios from "axios"
 import Countdown from "react-countdown"
+import emailjs from "@emailjs/browser"
+
 export const Shop=()=>{
     
     const [categories,set_categories] = useState<Array<CategoriesResInterface>>([])
@@ -73,7 +75,7 @@ export const Shop=()=>{
     const handle_payment= (e:FormEvent)=>{
         e.preventDefault()
         set_payment_loading(true)
-        const checkout_data:PaymentDataInterface = {...pay_data, order_details:[{item: selected_item.item_name, unit_charge:selected_item.price,quantity:quanity_order},{item:"Tax 15%", unit_charge:tax_charge,quantity:1}]}
+        const checkout_data:PaymentDataInterface = {...pay_data, order_details:[{item_id:selected_item.id, item: selected_item.item_name, unit_charge:selected_item.price,quantity:quanity_order},{item:"Tax 15%", unit_charge:tax_charge,quantity:1}]}
         const payment_data = {
             items:checkout_data.order_details,
             mobile_number:checkout_data.client_details.payment_number,
@@ -122,7 +124,29 @@ export const Shop=()=>{
                 if(res.status==200){
                     console.log(res.data)
                     if(res.data.status==="paid"||res.data.status==="awaiting delivery"||res.data.status==="Delivered"){
-                        toast("Transaction successful")
+                        const transaction_data:TransactionInterface = {
+                            first_name: pay_data.client_details.first_name,
+                            last_name: pay_data.client_details.last_name,
+                            charged: total_charge,
+                            email: pay_data.client_details.email,
+                            phone_number: pay_data.client_details.payment_number,
+                            user_id: user_id,
+                            address: pay_data.client_details.address,
+                            item_id: selected_item.id
+                        }
+                        db.from("transactions").insert({
+                            ...transaction_data
+                        }).then(res=>{
+                            emailjs.send(service_id, template_id, {...transaction_data}, {
+                                publicKey:public_key
+                            }).then(eres=>{
+                                console.log(eres)
+                            }).catch(eerr=>{
+                                console.log(eerr)
+                            }).finally(()=>{
+                                toast("Transaction successfull!")
+                            })
+                        })
                     }else if(res.data.status==="sent"||res.data.status==="created"){
                         set_restart_countdown((prev)=>prev+1)
                     }
@@ -395,6 +419,7 @@ export const Shop=()=>{
                         </div>
                     </Modal.Body>
                 </Modal>
+                
         </div>
     )
 }

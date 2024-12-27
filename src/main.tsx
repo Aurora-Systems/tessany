@@ -10,6 +10,7 @@ import Shop from './pages/shop'
 import Contact from './pages/contact'
 import Blog from './pages/blog'
 import { ToastContainer } from 'react-toastify'
+import Success from "./pages/success_page.tsx";
 
 createRoot(document.getElementById('root')!).render(
   <>
@@ -20,7 +21,8 @@ createRoot(document.getElementById('root')!).render(
         <Route index path="/" element={<Home/>}/>
         <Route path="/shop" element={<Shop/>}/>  
         <Route path="/blog" element={<Blog/>}/>
-        <Route path="/contact_us" element={<Contact/>}/>    
+        <Route path="/contact_us" element={<Contact/>}/>
+          <Route path="/success" element={<Success/>}/>
         </Routes>
     </BrowserRouter>
     <Footer/>

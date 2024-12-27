@@ -4,18 +4,15 @@ import {toast} from "react-toastify"
 import item_bg from "../components/item_bg"
 import ClampLines from "react-clamp-lines"
 import { Modal, Spinner } from "react-bootstrap"
-import { CategoriesResInterface } from "../schemas/categories_schema"
 import { items_res_default, ItemsResInterface } from "../schemas/items_schema"
 import checkout_bg from "../components/checkout_bg"
-import { payment_data_default, PaymentDataInterface, TransactionInterface } from "../schemas/payment_schema"
-import { public_key, server_url, service_id, template_id, user_id } from "../db/keys"
-import axios from "axios"
-import Countdown from "react-countdown"
-import emailjs from "@emailjs/browser"
+import { payment_data_default, PaymentDataInterface,  } from "../schemas/payment_schema"
+import {  server_url, user_id } from "../db/keys"
+
 
 export const Shop=()=>{
     
-    const [categories,set_categories] = useState<Array<CategoriesResInterface>>([])
+    // const [categories,set_categories] = useState<Array<CategoriesResInterface>>([])
     const [items,set_items] = useState<Array<ItemsResInterface>>([])
     const [show_checkout,set_show_checkout] = useState<boolean>(false)
     const [selected_item,set_selected_item] = useState<ItemsResInterface>(items_res_default)
@@ -25,14 +22,10 @@ export const Shop=()=>{
     const [tax_charge,set_tax_charge] = useState<number>(0)
     const [show_transaction,set_show_transaction] = useState<boolean>(false)
     const [payment_loading,set_payment_loading] = useState<boolean>(false)
-    const [poll,set_poll] = useState<string>("")
-    const [restart_countdown,set_restart_countdown] = useState<number>(0)
     const get_categories=async()=>{
-        const {data, error} = await db.from("categories").select("*").eq("user_id", user_id) 
+        const {error} = await db.from("categories").select("*").eq("user_id", user_id)
         if(error){
             return toast("Unknown Error")
-        }else{
-             set_categories(data)
         }
     }
     const get_data=async()=>{
@@ -75,7 +68,7 @@ export const Shop=()=>{
     const handle_payment= (e:FormEvent)=>{
         e.preventDefault()
         set_payment_loading(true)
-        const checkout_data:PaymentDataInterface = {...pay_data, order_details:[{item_id:selected_item.id, item: selected_item.item_name, unit_charge:selected_item.price,quantity:quanity_order},{item:"Tax 15%", unit_charge:tax_charge,quantity:1}]}
+        const checkout_data:PaymentDataInterface = {...pay_data, order_details:[{item_id:selected_item.id, item: selected_item.item_name, unit_charge:selected_item.price,quantity:quanity_order}]}
         const payment_data = {
             items:checkout_data.order_details,
             mobile_number:checkout_data.client_details.payment_number,
@@ -95,10 +88,9 @@ export const Shop=()=>{
             }
             return response.json();
         })
-        .then(data => {
+        .then(() => {
             set_show_transaction(true)    
-            set_poll(data.data.pollUrl as string)        
-                
+
         })
         .catch(error => {
             console.error('Error initiating payment:', error);
@@ -118,64 +110,7 @@ export const Shop=()=>{
         // })
     }
 
-    const check_paid=({seconds, completed})=>{
-        if(completed){
-            axios.post(`${server_url}/payments/check_status`,{poll_url:poll}).then(res=>{
-                if(res.status==200){
-                    console.log(res.data)
-                    if(res.data.status==="paid"||res.data.status==="awaiting delivery"||res.data.status==="Delivered"){
-                        const transaction_data:TransactionInterface = {
-                            first_name: pay_data.client_details.first_name,
-                            last_name: pay_data.client_details.last_name,
-                            charged: total_charge,
-                            email: pay_data.client_details.email,
-                            phone_number: pay_data.client_details.payment_number,
-                            user_id: user_id,
-                            address: pay_data.client_details.address,
-                            item_id: selected_item.id
-                        }
-                        db.from("transactions").insert({
-                            ...transaction_data
-                        }).then(res=>{
-                            emailjs.send(service_id, template_id, {...transaction_data}, {
-                                publicKey:public_key
-                            }).then(eres=>{
-                                console.log(eres)
-                            }).catch(eerr=>{
-                                console.log(eerr)
-                            }).finally(()=>{
-                                toast("Transaction successfull!")
-                            })
-                        })
-                    }else if(res.data.status==="sent"||res.data.status==="created"){
-                        set_restart_countdown((prev)=>prev+1)
-                    }
-                }else{
-                   throw new Error("Failed to get payment status")
-                }
-            }).catch(err=>{
-                console.log(err)
-                toast("Failed to get payment status")
-                set_show_transaction(false)
-            })
-            return(
-                "Checking..."
-            )
-          
-        }else{
-            return(
-                <div className="text-center">
-                <p>Waiting for transaction to go through</p>
-                <p>Checking in</p>
-                <h1 className="mb-2">{seconds} s </h1>
-                <div className="d-flex gap-2">
-                    <button className="btn btn-outline-success gen_btn">Check Now</button>
-                    <button className="btn btn-outline-danger gen_btn" onClick={()=>set_show_transaction(false)}>Cancel</button>
-                </div>
-                </div>
-            )
-        }
-    }
+
     useEffect(()=>{
         get_categories()
         get_data()
@@ -192,16 +127,16 @@ export const Shop=()=>{
                 <input type="text" className="form-control"/>
                 <button className="btn s_bg text-white">Search</button>
             </div>
-            <div className="d-flex flex-row flex-nowrap gap-3 p-4 slider_container mb-3" >
-            {
-                categories.map((i,index)=>{
-                    return(
-                        <button className="btn slider_btn" key={index}>{i.category}</button>
-                    )
-                })
-            }
-               
-            </div>
+            {/*<div className="d-flex flex-row flex-nowrap gap-3 p-4 slider_container mb-3" >*/}
+            {/*{*/}
+            {/*    categories.map((i,index)=>{*/}
+            {/*        return(*/}
+            {/*            <button className="btn slider_btn" key={index}>{i.category}</button>*/}
+            {/*        )*/}
+            {/*    })*/}
+            {/*}*/}
+            {/*   */}
+            {/*</div>*/}
            
 
 
@@ -410,11 +345,7 @@ export const Shop=()=>{
                     <Modal.Body>
                         <div className="vh-100 d-flex align-items-center justify-content-center">
                             <div>
-                                <Countdown 
-                                    key={restart_countdown}
-                                    date={Date.now()+10000}
-                                    renderer={check_paid}
-                                />
+
                             </div>
                         </div>
                     </Modal.Body>

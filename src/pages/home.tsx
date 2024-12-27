@@ -84,9 +84,9 @@ export const Home=()=>{
                
             </div>
             <div className="mt-5 text-center">
-                <h3 className="display-3 text-black">Join Our <span className="s_text">Elite</span>Circle</h3>
+                <h3 className="display-3 text-black">Join Our <span className="s_text">Elite</span> Circle</h3>
                 <p>
-                Become a part of our exclusive community and gain access to special previews, limited edition releases, and personalized recommendations. At [Your Brand Name], we celebrate those who appreciate the finer things in life and offer them an experience that is both extraordinary and exclusive.
+                Become a part of our exclusive community and gain access to special previews, limited edition releases, and personalized recommendations.  We celebrate those who appreciate the finer things in life and offer them an experience that is both extraordinary and exclusive.
                 </p>
                 <iframe src="https://secretsbytessa.substack.com/embed"  style={{ background:"white"}} scrolling="no"></iframe>
             </div>

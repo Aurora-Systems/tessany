@@ -66,3 +66,11 @@ body{
 .gen_btn{
   width: 200px;
 }
+
+
+.float_btn{
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index:1050;
+}

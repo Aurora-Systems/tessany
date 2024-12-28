@@ -5,7 +5,6 @@ import item_bg from "../components/item_bg"
 import ClampLines from "react-clamp-lines"
 import { Modal, Spinner } from "react-bootstrap"
 import { items_res_default, ItemsResInterface } from "../schemas/items_schema"
-import checkout_bg from "../components/checkout_bg"
 import { payment_data_default, PaymentDataInterface,  } from "../schemas/payment_schema"
 import {  server_url, user_id } from "../db/keys"
 
@@ -22,6 +21,7 @@ export const Shop=()=>{
     const [tax_charge,set_tax_charge] = useState<number>(0)
     const [show_transaction,set_show_transaction] = useState<boolean>(false)
     const [payment_loading,set_payment_loading] = useState<boolean>(false)
+    const [cart,set_cart] = useState<Array<{id:number,items:ItemsResInterface[]}>>([])
     const get_categories=async()=>{
         const {error} = await db.from("categories").select("*").eq("user_id", user_id)
         if(error){
@@ -42,28 +42,24 @@ export const Shop=()=>{
         set_show_checkout(false)
     }
 
-    const update_quantity_order=(quant_method:"-"|"+")=>{
+    const update_quantity_order=(quant_method:"-"|"+", item_id:number)=>{
         if(quant_method==="+"){
-            if((quanity_order+1)<=selected_item.in_stock){
-                const total = selected_item.price*(quanity_order+1)
-                set_total_charge(total)
-                set_tax_charge(((total/100)*15))
-                set_quanity_order(prev=>prev+1)
+            const without_item = cart.filter((i)=>i.id!==item_id)
+            const with_item = cart.filter((i)=>i.id===item_id)
+            with_item[0].items.push(with_item[0].items[0])
+            set_cart([...with_item,...without_item])
+        }else{
+            const without_item = cart.filter((i)=>i.id!==item_id)
+            const with_item = cart.filter((i)=>i.id===item_id)
+            if(with_item[0].items.length===1){
+                return toast("⚠️ Minimum order of 1")
             }else{
-                toast("Can't order more")
+                const new_data = {id:item_id,items:with_item[0].items.slice(0,-1)}
+                set_cart([...without_item,new_data])
             }
         }
 
-        if(quant_method==="-"){
-            if((quanity_order-1)>0){
-                const total = selected_item.price*(quanity_order-1)
-                set_total_charge(total)
-                set_tax_charge(((total/100)*15))
-                set_quanity_order(prev=>prev-1)
-            }else{
-                toast("⚠️ Minimum order of 1")
-            }
-        }
+
     }
     const handle_payment= (e:FormEvent)=>{
         e.preventDefault()
@@ -108,6 +104,23 @@ export const Shop=()=>{
         // }).catch(err=>{
         //     console.log(err)
         // })
+    }
+
+    const add_to_cart=(item:ItemsResInterface)=>{
+        const exists = cart.filter(i=>i.id===item.id)
+        const without = cart.filter(i=>i.id!==item.id)
+        if(exists.length>0){
+            return toast(`⚠️ ${item.item_name} already added to cart!`)
+        }else{
+            const data = {id:item.id,items:[item]}
+            set_cart([...without,data])
+            return toast(`✅ ${item.item_name} added to cart!`)
+        }
+    }
+
+    const delete_from_cart=(item_id:number)=>{
+        const remove_item = cart.filter((i)=>i.id!==item_id)
+        set_cart([...remove_item])
     }
 
 
@@ -190,13 +203,10 @@ export const Shop=()=>{
                                     {stock_message}
                                    </div>
                                     <div className="mb-2 d-flex gap-2">
-                                        {/* <button className="btn btn-success w-100"> <i className="bi bi-eye"></i> View</button> */}
-                                        <button className="btn btn-success w-100 " onClick={()=>{
-                                            set_total_charge(i.price)
-                                            set_tax_charge(((i.price/100)*15))
-                                            set_show_checkout(true)
-                                            set_selected_item(i)
-                                        }}><i className="bi bi-cart-check"></i> Checkout</button>
+                                        <button className="btn btn-success w-100 " onClick={()=>add_to_cart(i)}>
+                                            <i className="bi bi-cart-plus"></i>
+                                            Add to Cart
+                                        </button>
                                     </div>
                             </div>
                         )
@@ -217,24 +227,47 @@ export const Shop=()=>{
                         <div className="row">
                             <div className="col-sm">
                                 <h5>Order Summary</h5>
-                                <div className="d-flex flex-row gap-3 ">
-                                    <div className=" border rounded" style={checkout_bg(db.storage.from("images").getPublicUrl(selected_item.image_id).data.publicUrl)}>
-                                        
+                                {cart?.sort((a,b)=>a.id-b.id).map((i)=>{
+                                    const total_cost = i.items.reduce((total,item)=>total+item.price,0)
+                                    return(
+                                        <div>
+                                <div className="d-flex flex-row gap-3 mb-2" key={i.id}>
+
+                                    <div className=" " >
+                                        <img
+                                            width={"70px"}
+                                            src={db.storage.from("images").getPublicUrl(i.items[0].image_id).data.publicUrl}
+                                            className={"pt-1 rounded"}
+                                            onError={(e)=>e.currentTarget.src="https://ngratesc.sirv.com/store_manager/img_placeholder.png"}
+                                        />
                                     </div>
                                     <div className="col-sm w-100">
-                                        <div className="mb-2">
-                                            <span className="fw-bold mb-3">{selected_item.item_name}</span>
+                                        <div className=" d-flex justify-content-between">
+                                            <span className="fw-bold mb-1">{i.items[0].item_name}</span>
+                                            <span>${total_cost.toFixed(2)}</span>
                                         </div > 
-                                        <span>Quantity Order</span>
                                         <div className="bg-light mt-1 d-flex justify-content-between align-items-center">
-                                            <button className="btn btn-outline-danger" onClick={()=>update_quantity_order("-")}><i className="bi bi-dash"></i></button>
-                                            <span>{quanity_order}</span>
-                                            <button className="btn btn-outline-success" onClick={()=>update_quantity_order("+")}><i className="bi bi-plus"></i></button>
+                                            <button className="btn btn-outline-dark" onClick={()=>update_quantity_order("-", i.id)}><i className="bi bi-dash"></i></button>
+                                            <span>{i.items.length}</span>
+                                            <button className="btn btn-outline-dark" onClick={()=>update_quantity_order("+", i.id)}><i className="bi bi-plus"></i></button>
                                         </div>
 
                                     </div>
+                                    <div>
+                                        <button
+                                            className={"btn   pb-1"}
+                                            onClick={() => delete_from_cart(i.id)}
+                                        >
+                                            <i className="bi bi-x-lg"></i>
+                                    </button>
+                                </div>
                                    
                                 </div>
+                                            <hr/>
+                                        </div>
+                                    )
+                                })
+                                }
                                 <div>
                                     <div className="mt-3 bg-light rounded">
                                         <table className="table">
@@ -299,36 +332,7 @@ export const Shop=()=>{
                                             />
                                         </div>
                                         <div className="mb-2">
-                                            <span>Payment Method</span>
-                                            <div className="form-check">
-                                            <input 
-                                                required 
-                                                type="radio" 
-                                                value={"ecocash"}  
-                                                className="form-check-input" 
-                                                name="payment_method"
-                                                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                                                onChange={(e:any)=>set_pay_data({...pay_data, client_details:{...pay_data.client_details, payment_method:e.target.value}})}    
-                                            />
-                                            <span className="form-check-label">Ecocash</span>
-
-                                            </div>
-                                            <div className="form-check">
-                                            <input 
-                                                required 
-                                                type="radio" 
-                                                value={"onemoney"} 
-                                                className="form-check-input" 
-                                                name="payment_method"
-                                                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                                                onChange={(e:any)=>set_pay_data({...pay_data, client_details:{...pay_data.client_details, payment_method:e.target.value}})}
-                                            />
-                                            <span className="form-check-label">One Money</span>
-
-                                            </div>
-                                        </div>
-                                        <div className="mb-2">
-                                            <span>Payment Mobile Number</span>
+                                            <span>Mobile Number</span>
                                             <input type="tel" minLength={10} maxLength={10} className="form-control" onChange={(e)=>set_pay_data({...pay_data, client_details:{...pay_data.client_details,payment_number:e.target.value}})}/>
                                         </div>
                                         <div>
@@ -350,7 +354,7 @@ export const Shop=()=>{
                         </div>
                     </Modal.Body>
                 </Modal>
-                
+            <button className={"float_btn rounded-pill btn btn-success"} onClick={()=>set_show_checkout(true)}><i className="bi bi-cart"></i> View Cart</button>
         </div>
     )
 }

@@ -29,7 +29,7 @@ export const Footer=()=>{
         <div className='s_bg container-fluid text-white text-center'>
             <div className='row'>
                 <div className="col-sm d-flex flex-column">
-                    <a href={"https://www.facebook.com/profile.php?id=61566433627611"}>Facebook</a>
+                    <a className={"text-white"} href={"https://www.facebook.com/profile.php?id=61566433627611"}>Facebook</a>
                     <span>www.tessah.co.zw</span>
                     <span>info@tessah.co.zw</span>
                     <span>+263 77 169 2396</span>
